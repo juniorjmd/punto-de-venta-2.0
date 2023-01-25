@@ -42,6 +42,12 @@ error_reporting(E_ERROR | E_WARNING | E_PARSE);
         define('URL_ODOO', 'https://cobegisa-pruebas-0211-4434633.dev.odoo.com'   ); 
           define('DB_ODOO', 'cobegisa-pruebas-0211-4434633'   );
         define('USER_ODOO', 'juniorjmd@gmail.com'  );  
+        /*ambiente de pruebas 2023 ultimo cambio al desarrollo
+          se va a generar una actualizacion automatica de las existencias en los diferentes location 
+         * de odoo con el fin de tener un repositorio local que estara vigente por un dia         */
+        define('URL_ODOO', 'https://cobegisa-tests-0111-6900706.dev.odoo.com'   ); 
+          define('DB_ODOO', 'cobegisa-tests-0111-6900706'   );
+        define('USER_ODOO', 'administrativo@cobegisa.com.co'  );  
         /**********************************************************************************/
         
         
