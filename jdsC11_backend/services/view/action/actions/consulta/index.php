@@ -1,9 +1,9 @@
 <?php
-require_once '../../../php/helpers.php';  
-require_once'../../../php/fpdf181/fpdf.php'; 
+require_once '../../../../../php/helpers.php';  
+require_once'../../../../../php/fpdf181/fpdf.php'; 
 //echo print_r(FILTRAR_DATOS_RFC_EASYSALE_CLIENTES());
 spl_autoload_register(function ($nombre_clase) {
-    $nomClass =  '../../../'. str_replace('\\','/',$nombre_clase ).'.php' ;
+    $nomClass =  '../../../../../'. str_replace('\\','/',$nombre_clase ).'.php' ;
    if ( file_exists($nomClass ) ) {  require_once $nomClass;}
  });
 new Core\Config();  
@@ -2064,7 +2064,6 @@ switch ($action){
            
      }
     break;
-    
     CASE 'BUSCAR_MARCAS':
          $varOdoo = new Class_php\Odoo(null, null, null,null);
         // $datos['checkAccess'] =  $varOdoo->checkAccess();

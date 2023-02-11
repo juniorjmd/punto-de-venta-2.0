@@ -23,8 +23,7 @@ class Config {
 error_reporting(E_ERROR | E_WARNING | E_PARSE);
 
         date_default_timezone_set("America/Bogota"); 
-        define('DB_TYPE', 'mysql');          
-      
+        define('DB_TYPE', 'mysql');      
         
         // echo 'si esta';
         define('PASS_INICIAL','jds_pass1');  
@@ -37,11 +36,11 @@ error_reporting(E_ERROR | E_WARNING | E_PARSE);
         define('DESC_SUC_PRINCIPAL',sha1('JDS_SUCURSAL_PRINCIPAL')  );
         /**********************************************************************************/
        // define('APYKEYODOO', '26e83273e7a356255552a363ef521c3a3d04e238'   );
-        define('APYKEYODOO', 'cobegisa2021'   );   
+        define('APYKEYODOO', 'cobegisa2023'   );   
       //  define('URL_ODOO', 'https://cobegisa.odoo.com/'   ); 
-        define('URL_ODOO', 'https://cobegisa-pruebas-0211-4434633.dev.odoo.com'   ); 
-          define('DB_ODOO', 'cobegisa-pruebas-0211-4434633'   );
-        define('USER_ODOO', 'juniorjmd@gmail.com'  );  
+       //  define('URL_ODOO', 'https://cobegisa-pruebas-0211-4434633.dev.odoo.com'   ); 
+       //   define('DB_ODOO', 'cobegisa-pruebas-0211-4434633'   );
+       // define('USER_ODOO', 'juniorjmd@gmail.com'  );  
         /*ambiente de pruebas 2023 ultimo cambio al desarrollo
           se va a generar una actualizacion automatica de las existencias en los diferentes location 
          * de odoo con el fin de tener un repositorio local que estara vigente por un dia         */

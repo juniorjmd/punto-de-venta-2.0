@@ -87,7 +87,7 @@ class DataBase  {
          $array['query'] = $query;
          return $array;
    }
-       public  function procedimiento($procedimiento,$parametros = array()){  
+   public  function procedimiento($procedimiento,$parametros = array()){  
        $procedimiento= trim($procedimiento);
        $query = "CALL `{$procedimiento}`("; 
        $coma =""; 
@@ -100,6 +100,33 @@ class DataBase  {
             $coma =","; 
        }
        $query .= ")";
+       //echo $query;
+       $consulta = $this->link->prepare($query);
+        
+           $array['query'] = $query; 
+       if ($consulta->execute()){
+           $array['datos'] =  $consulta->fetchAll();
+           $array['_result'] = 'ok';
+           
+       }
+           else{ $array['_result'] = 'error';} 
+       
+       return $array;
+   }
+   
+    public  function funciones($procedimiento,$parametros = array()){  
+       $procedimiento= trim($procedimiento);
+       $query = "select `{$procedimiento}`("; 
+       $coma =""; 
+       foreach ($parametros as $key => $value) {
+            if(is_numeric($value)){ 
+                 // $_TOTAL_PAGO = str_replace('.', ',',$_TOTAL_PAGO ); 
+                $query .= "$coma $value "; 
+                
+            }else{  $query .= "$coma '$value' "; } 
+            $coma =","; 
+       }
+       $query .= ") as result ";
        //echo $query;
        $consulta = $this->link->prepare($query);
         
