@@ -58,7 +58,18 @@ switch ($action){
          $_result =$conexion->where('vw_sucursales', $where);
         // $datos['11'] =  $_result['datos'][0]['usuario'];;
          if (sizeof($_result['datos']) > 0){
-             $datos = $_result['datos'] ;
+             $datos['sucursal'] = $_result['datos'] ;
+             if (isset($_key_actualizacion) && trim($_key_actualizacion) != '' ){
+
+                $where = " where `llave` =  '{$_key_actualizacion}' ";
+                $_result =$conexion->where('vw_sync_historico', $where);
+                $datos['datosActualizacion'] = $_result['datos'][0];
+             }
+             
+             
+             
+             
+             
          }else{
             $datos['error']= 'Error de datos, No existen valores iniciales para consultar ' ;
            echo json_encode($datos);

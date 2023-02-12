@@ -129,6 +129,243 @@ switch ($action){
      }
     break;
     
+    
+    case 'ACTUALIZAR_LISTADO_DE_MARCAS':
+       $varOdoo = new Class_php\Odoo(null, null, null,null);
+         $conexion =\Class_php\DataBase::getInstance();
+        $link = $conexion->getLink(); 
+         TRY{
+            
+         $datos['error']='ok';
+        IF ($varOdoo->checkAccess() === false ){
+            http_response_code(500);
+          $datos['error']= 'Error de coneccion a ODOO !!!'; 
+            echo json_encode($datos);
+            die();  
+        }    
+        
+    
+      $OdooTbl->clearParam();   
+        
+     
+        $data['parametros'] = $OdooTbl->getArrayParam();
+        $dataSet = $varOdoo->DataSet($OdooTbl->marcas,$OdooTbl->getArrayParam() , $OdooTbl->getArrayLimit());
+        //$datos['dataSet'] = $dataSet; 
+        $fields = ["id" ,"display_name" ,"create_date" ,"write_date" ,"__last_update" ,"x_name" ,"x_active" ,"x_studio_sequence" ,"x_avatar_image"];
+    
+        
+       $dataRead = $varOdoo->DataRead($OdooTbl->marcas, $dataSet , $fields    );
+       $datos['numdata'] = sizeof($dataRead);
+       //0$datos['data'] = $dataRead; 
+        $datos['parametros'] = $OdooTbl->getArrayParam();
+       
+   foreach ($dataRead as $DataValue) {
+       $llaves =''; 
+         $valores =''; 
+         $updatelist =''; 
+         $separador='';
+         $separadorUpd = '';
+        foreach ($DataValue as $key => $value) {
+            $dato = $value ;
+         if (is_array($value)){$dato = $value[0] ;}
+         
+         $llaves .= $separador."`".$key."`" ; 
+    
+        
+         $valores .=  $separador.'"'.$dato.'"'; 
+         
+         if(trim($key)!='id') {$updatelist .=  $separadorUpd."`".$key.'` = "'.$dato.'"'; 
+         $separadorUpd = ',';
+         } 
+         $separador = ',';
+        }
+        str_replace('/', '-', $valores);
+           $query= "INSERT INTO prd_studio_marca ($llaves ) VALUES ($valores) "
+                   . "ON DUPLICATE KEY UPDATE $updatelist ;";
+            $llaves = '';
+            $valores='';
+            $updatelist = '';
+             $consulta = $link->prepare($query);
+                   if(!$consulta->execute() )
+                   {
+                        $datos['$query']= $query;
+                       $datos['error']= 'Error al actualizar las categorias (prd_categorias) !!!'; 
+            echo json_encode($datos);
+            die(); }  
+         }
+         
+        
+         
+       }
+        catch (PDOException $e) {
+           http_response_code(500);
+        $datos['error']= 'Error de conexión: ' . $e->getMessage();
+           
+     }
+    break;
+    
+    case 'ACTUALIZAR_LISTADO_DE_TAXES':
+       $varOdoo = new Class_php\Odoo(null, null, null,null);
+         $conexion =\Class_php\DataBase::getInstance();
+        $link = $conexion->getLink(); 
+         TRY{
+            
+         $datos['error']='ok';
+        IF ($varOdoo->checkAccess() === false ){
+            http_response_code(500);
+          $datos['error']= 'Error de coneccion a ODOO !!!'; 
+            echo json_encode($datos);
+            die();  
+        }    
+        
+    
+      $OdooTbl->clearParam();   
+        
+     
+        $data['parametros'] = $OdooTbl->getArrayParam();
+        $dataSet = $varOdoo->DataSet($OdooTbl->impuestos,$OdooTbl->getArrayParam() , $OdooTbl->getArrayLimit());
+        //$datos['dataSet'] = $dataSet; 
+        $fields = ["id" ,"name" ,"type_tax_use" ,"tax_scope" ,"active" ,"sequence" ,"amount" ,"description" ,"price_include" ,"include_base_amount" ,"analytic" ,"tax_group_id" ,"hide_tax_exigibility" ,"tax_exigibility" ,"write_date" ,"__last_update" ,"amount_type"  ,"display_name"];
+    
+        
+       $dataRead = $varOdoo->DataRead($OdooTbl->impuestos, $dataSet ,$fields   );
+       $datos['numdata'] = sizeof($dataRead);
+      // $datos['data'] = $dataRead; 
+        $datos['parametros'] = $OdooTbl->getArrayParam();
+       
+   foreach ($dataRead as $DataValue) {
+       $llaves =''; 
+         $valores =''; 
+         $updatelist =''; 
+         $separador='';
+         $separadorUpd = '';
+        foreach ($DataValue as $key => $value) {
+            $dato = $value ;
+         if (is_array($value)){$dato = $value[0] ;}
+         
+         $llaves .= $separador."`".$key."`" ; 
+    
+        
+         $valores .=  $separador.'"'.$dato.'"'; 
+         
+         if(trim($key)!='id') {$updatelist .=  $separadorUpd."`".$key.'` = "'.$dato.'"'; 
+         $separadorUpd = ',';
+         } 
+         $separador = ',';
+        }
+        str_replace('/', '-', $valores);
+           $query= "INSERT INTO prd_taxes ($llaves ) VALUES ($valores) "
+                   . "ON DUPLICATE KEY UPDATE $updatelist ;";
+            $llaves = '';
+            $valores='';
+            $updatelist = '';
+             $consulta = $link->prepare($query);
+                   if(!$consulta->execute() )
+                   {
+                        $datos['$query']= $query;
+                       $datos['error']= 'Error al actualizar las categorias (prd_categorias) !!!'; 
+            echo json_encode($datos);
+            die(); } 
+         }
+         
+        
+         
+       }
+        catch (PDOException $e) {
+           http_response_code(500);
+        $datos['error']= 'Error de conexión: ' . $e->getMessage();
+           
+     }
+    break;
+    case 'FINALIZAR_ACTUALIZACION_ODOO':
+         TRY{    $datos['error']= 'ok';
+             $varOdoo = new Class_php\Odoo(null, null, null,null);
+             $conexion =\Class_php\DataBase::getInstance();
+        $link = $conexion->getLink(); 
+        $Now = new DateTime('now', new DateTimeZone('Asia/Taipei'));
+        $auxFecha=  $Now->format('Y-m-d H:i:s');
+
+        $_llave ='ACTULIZACION DESDE ODOO '.$auxFecha.'usuario999999';
+        $_llave =  sha1($_llave); ;
+        $datos['llave']=$_llave;
+        
+         $query= "INSERT INTO sync_historico ( `llave` ) VALUES ('$_llave') ;"; 
+            $consulta = $link->prepare($query);
+            if(!$consulta->execute() )
+            {  $datos['$query']= $query;
+            http_response_code(500);
+                $datos['error']= 'Error al finalizar la actualizacion las categorias (sync_historico) !!!'; 
+                 echo json_encode($datos);
+                 die();}
+         } catch (PDOException $e){
+                http_response_code(500);
+                $datos['error']= 'Error de conexión: ' . $e->getMessage();
+             
+         }
+        break;
+    case 'ACTUALIZAR_LISTADO_DE_CATEGORIAS':
+      
+         TRY{
+             $varOdoo = new Class_php\Odoo(null, null, null,null);
+         $conexion =\Class_php\DataBase::getInstance();
+        $link = $conexion->getLink(); 
+         $datos['error']='ok';
+        IF ($varOdoo->checkAccess() === false ){
+            http_response_code(500);
+          $datos['error']= 'Error de coneccion a ODOO !!!'; 
+            echo json_encode($datos);
+            die();  
+        }  
+      $OdooTbl->clearParam();   
+      $data['parametros'] = $OdooTbl->getArrayParam();
+      $dataSet = $varOdoo->DataSet($OdooTbl->categorias,$OdooTbl->getArrayParam() , $OdooTbl->getArrayLimit());
+        //$datos['dataSet'] = $dataSet; 
+      $fields = ["id","name","color","parent_id","child_ids","active","parent_path","display_name","create_date","write_date","__last_update"];
+      $dataRead = $varOdoo->DataRead($OdooTbl->categorias, $dataSet  , $fields );
+      $datos['numdata'] = sizeof($dataRead);
+       //$datos['data'] = $dataRead; 
+      $datos['parametros'] = $OdooTbl->getArrayParam();
+       
+      foreach ($dataRead as $DataValue) {
+         $llaves =''; 
+         $valores =''; 
+         $updatelist =''; 
+         $separador='';
+         $separadorUpd = '';
+         foreach ($DataValue as $key => $value) {
+            $dato = $value ;
+            if (is_array($value)){$dato = $value[0] ;}
+            $llaves .= $separador."`".$key."`" ; 
+            $valores .=  $separador.'"'.$dato.'"'; 
+            if(trim($key)!='id') {$updatelist .=  $separadorUpd."`".$key.'` = "'.$dato.'"'; 
+              $separadorUpd = ',';
+              } 
+              $separador = ',';
+            }
+           str_replace('/', '-', $valores);
+           $query= "INSERT INTO prd_categorias ($llaves ) VALUES ($valores) "
+                   . "ON DUPLICATE KEY UPDATE $updatelist ;";
+            $llaves = '';
+            $valores='';
+            $updatelist = '';
+            $consulta = $link->prepare($query);
+                   if(!$consulta->execute() )
+                   {
+                        $datos['$query']= $query;
+                       $datos['error']= 'Error al actualizar las categorias (prd_categorias) !!!'; 
+            echo json_encode($datos);
+            die(); }
+         }
+         
+        
+         
+       }
+        catch (PDOException $e) {
+           http_response_code(500);
+        $datos['error']= 'Error de conexión: ' . $e->getMessage();
+           
+     }
+    break;
     case 'ACTUALIZAR_LISTADO_DE_PRODUCTOS':
        $varOdoo = new Class_php\Odoo(null, null, null,null);
          $conexion =\Class_php\DataBase::getInstance();
@@ -160,7 +397,7 @@ switch ($action){
         
        $dataRead = $varOdoo->DataRead($OdooTbl->productos, $dataSet , $fields);
        $datos['numdata'] = sizeof($dataRead);
-        //$datos['data'] = $dataRead; 
+       $datos['data'] = $dataRead; 
         $datos['parametros'] = $OdooTbl->getArrayParam();
          
    foreach ($dataRead as $DataValue) {
