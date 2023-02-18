@@ -135,13 +135,16 @@ switch ($action){
            $validarExitencia =false;
            $OdooTbl->clearDatoInsert();
            foreach ($_datos_insert as $key => $value) {
-    
+             if(!is_numeric($key) && $key != 'id' ){
                if ($key ==='vat'   ){
                    $cedula =$value;
-               }  
-          
+               } 
+               if($key === 'l10n_latam_identification_type_id'){
+                   $value = number_format($value);
+               }
+    
                $OdooTbl->setNewDatoInsert($key, $value);
-           }
+           }}
             $datos['numdata'] = 0; 
             $datos['$cedula'] = $cedula; 
             $OdooTbl->clearParam();
@@ -155,7 +158,7 @@ switch ($action){
                            "street2" ,"state_id","zip" ,"country_id","function" ,"category_id" ,"title" ,"l10n_latam_identification_type_id" ];
             $dataread = array();
             $dataread = $varOdoo->DataRead($OdooTbl->cliente, $_op_type_id   , $FELDS);
-            $datos['data'] = $dataread;
+            $datos['data..uno'] = $dataread;
             $datos['numdata'] = sizeof($datos['data'] ); 
            
           
@@ -200,6 +203,7 @@ switch ($action){
            $UPDATE='';
            $coma = '';
            foreach ($_datos_insert as $key => $value) {
+               if ( ! is_numeric($key)){
                 $key = trim($key);
                
                if ($key ==='vat'   ){
@@ -233,7 +237,7 @@ switch ($action){
                $VALUES.=" {$coma} '{$value}' ";
                $UPDATE .=" {$coma} `{$key}` = '{$value}'";
                 $coma = ',';
-                
+               } 
            }
             $datos['numdata'] = 0; 
             $datos['$cedula'] = $cedula; 
@@ -326,15 +330,18 @@ switch ($action){
            $validarExitencia =false;
            $OdooTbl->clearDatoInsert();
            foreach ($_datos_insert as $key => $value) {
-    
+           if(!is_numeric($key)){
                if ($key ==='vat'   ){
                    $cedula =$value;
                }  
           
                $OdooTbl->setNewDatoInsert($key, $value);
-           }
+               
+           }}
             $datos['numdata'] = 0; 
             $datos['$cedula'] = $cedula; 
+            
+            
             $OdooTbl->clearParam();
             $OdooTbl->setNewParam("vat","=", $cedula); 
             $OdooTbl->setNewParam("parent_id","=", false ); 
@@ -1020,17 +1027,12 @@ switch ($action){
               $OdooTbl->setRelacionAND();
              $OdooTbl->setNewParam("barcode","=", $_cod_stock_p); 
              $OdooTbl->setNewParam("sequence_code","=", $_cod_sec_int_stock_p); 
-          //   $OdooTbl->clearParam();
-           $_op_type_id = $varOdoo->DataSet($OdooTbl->tipo_s_p,$OdooTbl->getArrayParam(), $OdooTbl->getArrayLimit());
-           //$datos['tipo_s_p']['$_op_type_id'] = $_op_type_id ; 
-           //$datos['tipo_s_p']['tabla'] = $OdooTbl->tipo_s_p ; 
-           //$datos['tipo_s_p']['parametros'] = $OdooTbl->getArrayParam(); 
+         
+             $_op_type_id = $varOdoo->DataSet($OdooTbl->tipo_s_p,$OdooTbl->getArrayParam(), $OdooTbl->getArrayLimit());
+         
            $dataRPrd = $varOdoo->DataRead($OdooTbl->tipo_s_p, $_op_type_id  );  
-           //$datos['tipo_s_p']['$dataRPrd'] =$dataRPrd;
-          //  echo json_encode($datos);
-           //       die(); 
-         //  print_r($op_type_id)  ; 
-           // se debe adquirir desde la base de datos con el cod del documento que se esta cerrando
+         
+// se debe adquirir desde la base de datos con el cod del documento que se esta cerrando
            // de la tabla vw_documentos 
             $OdooTbl->clearParam();
             $OdooTbl->setLimit(1);
@@ -1040,7 +1042,7 @@ switch ($action){
             $OdooTbl->setLimit(1);
             $OdooTbl->setNewParam("id", "=" , $_loc_virt ); 
             $loc_virt =  $varOdoo->DataSet($OdooTbl->bodegas,$OdooTbl->getArrayParam(), $OdooTbl->getArrayLimit());
-            echo '----';            print_r($loc_virt);
+            echo '---- virtual location';            print_r($loc_virt);
                      echo '----';
            
             $idMovimiento = $varOdoo->setSP($_op_type_id[0], $loc_wh[0], $loc_virt[0], $_move_ids , $_doc_obj->orden) ; 
@@ -1060,139 +1062,15 @@ switch ($action){
                          " documento_odoo = {$idMovimiento} , ".
                          " tipoDocumentoFinal = (SELECT id FROM  tipos_de_documentos where nombre = 'venta' )". 
                          " where orden = {$_doc_obj->orden}";
+                         echo 'query update'. $query;
                          $consulta = $link->prepare($query);
-                      if ($consulta->execute()){
+                      if ($consulta->execute())
+                      {
                           $where = " where orden = {$_documento} ";
-                           $_rst_documento  =$conexion->where('vw_obj_documentos', $where  );  
-                           if ( (sizeof($_rst_documento['datos']) > 0)){ 
-                              $_doc_obj = json_decode( $_rst_documento['datos'][0]['objeto']) ;
-                              $cntMov = 0;
-                              $cantVen = 0;
-                               foreach ($_doc_obj->listado as  $value) {
-                                   if($value ->estado_linea_venta == 'A')
-                                   {  $_move_ids[$cntMov] = $value ->id_stock_move_odoo ;
-                                   $cantVen += $value->cantidadVendida ;
-                                   $cntMov++;}
-                                }
-                            $OdooTbl->clearDatoInsert();
-                            
-                             $OdooTbl->setNewDatoInsert("name", $_doc_obj->idDocumentoFinal  );
-			 $OdooTbl->setNewDatoInsert("state", "sale" );
-			 $OdooTbl->setNewDatoInsert("date_order", "2022-04-21 14,49,12" );
-			 $OdooTbl->setNewDatoInsert("validity_date", false );
-			 $OdooTbl->setNewDatoInsert("is_expired", false );
-			 $OdooTbl->setNewDatoInsert("require_signature", false );
-			 $OdooTbl->setNewDatoInsert("require_payment", false );
-			 $OdooTbl->setNewDatoInsert("create_date", "2022-04-21 14,49,03" );
-			 $OdooTbl->setNewDatoInsert("user_id", 2 );
-			 $OdooTbl->setNewDatoInsert("partner_id", $_doc_obj->clienteobj[0]['id'] ); 
-			 $OdooTbl->setNewDatoInsert("partner_invoice_id",  $_doc_obj->clienteobj[0]['id']);
-			 $OdooTbl->setNewDatoInsert("partner_shipping_id", $_doc_obj->clienteobj[0]['id'] );
-			$OdooTbl->setNewDatoInsert("pricelist_id",2);
-			$OdooTbl->setNewDatoInsert("currency_id", 8 );
-			$OdooTbl->setNewDatoInsert("analytic_account_id", false );
-			$OdooTbl->setNewDatoInsert("order_line", $cntMov - 1 );
-			$OdooTbl->setNewDatoInsert("invoice_count", 0); 
-			$OdooTbl->setNewDatoInsert("invoice_status", "no");
-			$OdooTbl->setNewDatoInsert("note", "venta realizada desde punto de venta externo");
-			$OdooTbl->setNewDatoInsert("amount_untaxed", $_doc_obj->presioVenta); 
-			$OdooTbl->setNewDatoInsert("amount_tax", 0); 
-			$OdooTbl->setNewDatoInsert("amount_total", $_doc_obj->presioVenta); 
-			$OdooTbl->setNewDatoInsert("currency_rate", 1); 
-			$OdooTbl->setNewDatoInsert("payment_term_id", 4);
-			$OdooTbl->setNewDatoInsert("fiscal_position_id", 2);
-			$OdooTbl->setNewDatoInsert("company_id", 1);
-			$OdooTbl->setNewDatoInsert("team_id", 1);
-			$OdooTbl->setNewDatoInsert("amount_undiscounted", $_doc_obj->presioVenta); 
-			$OdooTbl->setNewDatoInsert("type_name", "Sales Order" ) ;
-			$OdooTbl->setNewDatoInsert("show_update_pricelist", true);
-			$OdooTbl->setNewDatoInsert("sale_order_template_id", false );
-			$OdooTbl->setNewDatoInsert("purchase_order_count", 0 ); 
-			$OdooTbl->setNewDatoInsert("picking_policy", "direct" );
-			$OdooTbl->setNewDatoInsert("warehouse_id", 5);
-			$OdooTbl->setNewDatoInsert("picking_ids",$_move_ids );
-			$OdooTbl->setNewDatoInsert("delivery_count", 2);
-			$OdooTbl->setNewDatoInsert("expected_date", $_doc_obj->fecha);
-			$OdooTbl->setNewDatoInsert("cart_quantity", $cantVen ) ;
-			$OdooTbl->setNewDatoInsert("display_name",$_doc_obj->idDocumentoFinal );
-			$OdooTbl->setNewDatoInsert("create_uid", 2 ) ;
-			$OdooTbl->setNewDatoInsert("write_uid", 2 ) ;
-			$OdooTbl->setNewDatoInsert("write_date", $_doc_obj->fecha);
-			$OdooTbl->setNewDatoInsert("__last_update", $_doc_obj->fecha);
-                            $respUpdCnt = $varOdoo->Create($OdooTbl->ventas,$OdooTbl->getDatosInsert()); 
-                                $datos['$respUpdCnt'] = $respUpdCnt;
-                          ///insertar las lineas de venta      
-                                $cntMov = 0;
-                            foreach ($_doc_obj->listado as  $value) {
-                              if($value ->estado_linea_venta == 'A')
-                               {$_move_ids[$cntMov] = $value ->id_stock_move_odoo ;
-                                $OdooTbl->clearDatoInsert();
-                                $OdooTbl->setNewDatoInsert("order_id", $respUpdCnt);
-                            $OdooTbl->setNewDatoInsert("name", $value ->nombreProducto );
-                            $OdooTbl->setNewDatoInsert("sequence", 10); 
-                            $OdooTbl->setNewDatoInsert("invoice_status", "to invoice");
-                            $OdooTbl->setNewDatoInsert("price_unit", $value->presioVenta);
-                            $OdooTbl->setNewDatoInsert("price_subtotal", $value->valorTotal);
-                            $OdooTbl->setNewDatoInsert("price_tax", 0);
-                            $OdooTbl->setNewDatoInsert("price_total", $value->valorTotal);
-                            $OdooTbl->setNewDatoInsert("price_reduce", $value->valorTotal);
-                            $OdooTbl->setNewDatoInsert("tax_id",9);
-                            $OdooTbl->setNewDatoInsert("price_reduce_taxinc", 0);
-                            $OdooTbl->setNewDatoInsert("price_reduce_taxexcl", $value->presioVenta);
-                            $OdooTbl->setNewDatoInsert("discount", 0);
-                            $OdooTbl->setNewDatoInsert("product_id",$value ->nombreProducto );
-                            $OdooTbl->setNewDatoInsert("product_template_id", $value ->nombreProducto );
-                            $OdooTbl->setNewDatoInsert("product_updatable", false);
-                            $OdooTbl->setNewDatoInsert("product_uom_qty", 2);
-                            $OdooTbl->setNewDatoInsert("product_uom",1);
-                            $OdooTbl->setNewDatoInsert("product_uom_category_id", 1);
-                            $OdooTbl->setNewDatoInsert("product_uom_readonly", true); 
-                            $OdooTbl->setNewDatoInsert("qty_delivered", $value->cant_real_descontada);
-                            $OdooTbl->setNewDatoInsert("qty_delivered_manual", 0);
-                            $OdooTbl->setNewDatoInsert("qty_to_invoice", 2);
-                            $OdooTbl->setNewDatoInsert("qty_invoiced", 0);
-                            $OdooTbl->setNewDatoInsert("untaxed_amount_invoiced", 0);
-                            $OdooTbl->setNewDatoInsert("untaxed_amount_to_invoice", $value->presioVenta);
-                            $OdooTbl->setNewDatoInsert("salesman_id", 9);
-                            $OdooTbl->setNewDatoInsert("currency_id",8); 
-                            $OdooTbl->setNewDatoInsert("company_id",1);  
-                            $OdooTbl->setNewDatoInsert("qty_delivered_method", "stock_move");
-                            $OdooTbl->setNewDatoInsert("product_packaging", false);
-                            $OdooTbl->setNewDatoInsert("route_id", false);
-                            $OdooTbl->setNewDatoInsert("move_ids", $value ->id_stock_move_odoo );
-                            $OdooTbl->setNewDatoInsert("product_type", "product");
-                            $OdooTbl->setNewDatoInsert("virtual_available_at_date", 0);
-                            $OdooTbl->setNewDatoInsert("scheduled_date", false);
-                            $OdooTbl->setNewDatoInsert("forecast_expected_date", false);
-                            $OdooTbl->setNewDatoInsert("free_qty_today", 0);
-                            $OdooTbl->setNewDatoInsert("qty_available_today", 0);
-                            $OdooTbl->setNewDatoInsert("warehouse_id", 7);
-                            $OdooTbl->setNewDatoInsert("qty_to_deliver", 0);
-                            $OdooTbl->setNewDatoInsert("is_mto", false);
-                            $OdooTbl->setNewDatoInsert("display_qty_widget", false);
-                            $OdooTbl->setNewDatoInsert("name_short", $value ->nombreProducto );
-                            $OdooTbl->setNewDatoInsert("linked_line_id", false); 
-                            $OdooTbl->setNewDatoInsert("warning_stock", false);
-                            $OdooTbl->setNewDatoInsert("display_name",$value ->nombreProducto );
-                            $OdooTbl->setNewDatoInsert("create_uid",9);
-                            $OdooTbl->setNewDatoInsert("create_date", $_doc_obj->fecha);
-                            $OdooTbl->setNewDatoInsert("write_uid", 9);
-                            $OdooTbl->setNewDatoInsert("write_date", $_doc_obj->fecha);
-                            $OdooTbl->setNewDatoInsert("__last_update",$_doc_obj->fecha );
-                             $respLineas[$cntMov] = $varOdoo->Create($OdooTbl->ventas_linea,$OdooTbl->getDatosInsert()); 
-                             $cntMov++;
-                             
-                                   }
-                            }
-                          ///insertar las lineas de venta         
-                             
-                                
-                           }
-                           
-                           
-                           $datos['error']='ok';
+                          $datos['error']='ok';
                          //  actualizaCierresPagos
                         $actualizaDocPrd =  $conexion->procedimiento('actualizaCierresPagos', [$_documento]  );
+                           $datos['$actualizaDocPrd']= $actualizaDocPrd;
                         if($actualizaDocPrd['_result'] === 'ok'){
                            $_rst_documento  =$conexion->where('vw_obj_documentos', $where  );  
                            if ( (sizeof($_rst_documento['datos']) > 0)){
@@ -1205,7 +1083,8 @@ switch ($action){
                             echo json_encode($datos);
                             die(); 
                         }
-                      }else{  
+                      }
+                      else{  
                          $datos['error']= 'Error de datos, faltan uno o mas valores para la consulta ' ;
                         http_response_code(500);
                         echo json_encode($datos);
@@ -1374,31 +1253,6 @@ switch ($action){
            $loc_virt_r = $varOdoo->DataRead($OdooTbl->bodegas,$loc_virt);
              //-------------------------------------------------------
              
-    
-               
-                 $OdooTbl->clearParam();    
-                $OdooTbl->setLimit(1);
-                
-                 $OdooTbl->setNewParam("product_id","=", $dataPrd ); 
-                $OdooTbl->setNewParam("location_id","=", $loc_wh);  
-                 $cntDS =  $varOdoo->DataSet($OdooTbl->existencias,$OdooTbl->getArrayParam() , $OdooTbl->getArrayLimit());
-    
-                if (sizeof($cntDS) > 0 ){
-                    /*$dataPrd*/
-                   $cnt = $varOdoo->DataRead($OdooTbl->existencias, $cntDS  );
-                    if (  $cnt[0][ "quantity"]  < $_cantidad ){
-                       $datos['error']= 'Error la cantidad es superior a la existencias del producto enviado !!! ';
-                        echo json_encode($datos);
-                        die(); 
-                    }
-                    
-                }else{
-                  http_response_code(500);
-                  $datos['error']= 'Error no hay existencias del producto enviado !!! ';
-                  echo json_encode($datos);
-                  die(); 
-                }
-
             
            $OdooTbl->clearParam();
             $OdooTbl->setLimit(1);
@@ -1436,7 +1290,8 @@ switch ($action){
                         "idProducto, nombreProducto, presioVenta,  ".
                         "porcent_iva, presioSinIVa, IVA, cantidadVendida, ".
                         "descuento, valorTotal, usuario,fecha,  ".
-                        "hora, cant_real_descontada , id_stock_move_odoo ) values  "
+                        "hora, cant_real_descontada , id_stock_move_odoo "
+                    . " , id_existencia ) values  "
             . "({$_rst_documento['datos'][0]['orden']}, "
             . "{$_rst_documento['datos'][0]['tipoDocumentoFinal']} , "
             . "'{$dataRPrd[0]['barcode']}' ,'{$dataRPrd[0]['categ_id'][0]}', "
@@ -1444,7 +1299,7 @@ switch ($action){
             . "{$_precio_brt_prd} , {$_iva_porc} , {$_precio_siniva_prd} , {$_precio_iva_prd} ,"
             . "{$_cantidad} , {$_descuento} , ({$_precio_brt_prd} - {$_descuento} ) * {$_cantidad} ,"
             . "{$_rst_documento['datos'][0]['usuario'] } , now() , now() , {$_cantidad} , {$_move_id_1} "
-            . " )"; 
+            . " , {$_id_bodega} )"; 
             
             
             /* IF ((!isset($_precio_brt_prd) && trim( $_precio_brt_prd ) === '' )||
@@ -3191,6 +3046,10 @@ switch ($action){
        $conexion =Class_php\DataBase::getInstance(); 
        //($tabla,$where = null)
        $where = '';
+       $limit=null;
+       if(isset($_limit)&& is_numeric($_limit) && $_limit>0){
+           $limit = " LIMIT $_limit";
+       }
        if (isset($_where) and sizeof($_where)> 0 and is_array($_where)){
          $where = ' WHERE '; 
          $and = ''; 
@@ -3240,7 +3099,7 @@ switch ($action){
       if  (isset($_tablau) && trim($_tablau) != ''){
           $_result =$conexion->where_union($_tabla, $where,$_tablau, $whereu);
       }else{
-      $_result =$conexion->where($_tabla, $where,$columnas);}
+      $_result =$conexion->where($_tabla, $where,$columnas , $limit);}
       /*$array['datos'] =  $consulta->fetchAll();
          $array['query'] */
        if (isset($_obj) && sizeof($_obj) > 0  ){

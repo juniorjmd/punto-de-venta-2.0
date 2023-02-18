@@ -64,7 +64,7 @@ class DataBase  {
                . "select $columnas from $tablau $whereu $limit"; 
        $consulta = $this->link->prepare($query);
          $consulta->execute(); 
-         $array['datos'] =  $consulta->fetchAll();
+         $array['datos'] =  $consulta->fetchAll(PDO::FETCH_ASSOC);
          $array['query'] = $query;
          return $array;
  }
@@ -83,7 +83,7 @@ class DataBase  {
        
        $consulta = $this->link->prepare($query);
          $consulta->execute(); 
-         $array['datos'] =  $consulta->fetchAll();
+         $array['datos'] =  $consulta->fetchAll(PDO::FETCH_ASSOC);
          $array['query'] = $query;
          return $array;
    }
@@ -105,7 +105,7 @@ class DataBase  {
         
            $array['query'] = $query; 
        if ($consulta->execute()){
-           $array['datos'] =  $consulta->fetchAll();
+           $array['datos'] =  $consulta->fetchAll(PDO::FETCH_ASSOC);
            $array['_result'] = 'ok';
            
        }
@@ -132,7 +132,7 @@ class DataBase  {
         
            $array['query'] = $query; 
        if ($consulta->execute()){
-           $array['datos'] =  $consulta->fetchAll();
+           $array['datos'] =  $consulta->fetchAll(PDO::FETCH_ASSOC);
            $array['_result'] = 'ok';
            
        }

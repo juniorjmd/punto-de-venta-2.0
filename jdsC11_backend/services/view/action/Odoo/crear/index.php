@@ -45,6 +45,122 @@ foreach ($_POST as $clave => $valor){
 $datos['post']= $_POST;
 $OdooTbl = new Class_php\OdooDB(); 
 switch ($action){ 
+    case 'CREAR_CLIENTE_ODOO_A_CONTROL':
+         $varOdoo = new Class_php\Odoo(null, null, null,null);
+         $conexion =\Class_php\DataBase::getInstance();
+        $link = $conexion->getLink(); 
+         TRY{
+            
+         $datos['error']='ok';
+        IF ($varOdoo->checkAccess() === false ){
+            http_response_code(500);
+          $datos['error']= 'Error de coneccion a ODOO !!!'; 
+            echo json_encode($datos);
+            die();  
+        }    
+        
+    
+      $OdooTbl->clearParam();   
+        
+     ////////////////////////////////
+      
+            $OdooTbl->clearParam();
+            $OdooTbl->setNewParam("vat","=", $_datos_insert['vat']); 
+            $OdooTbl->setNewParam("l10n_latam_identification_type_id","=", $_datos_insert['l10n_latam_identification_type_id']); 
+            $OdooTbl->setNewParam("parent_id","=", false ); 
+            $OdooTbl->setNewParam("is_company","=", false ); 
+            $OdooTbl->setNewParam("company_type","=", 'person'); 
+            $data['parametros'] = $OdooTbl->getArrayParam();
+            $_op_type_id = $varOdoo->DataSet($OdooTbl->cliente,$OdooTbl->getArrayParam(), $OdooTbl->getArrayLimit());
+            $datos['op_type_id'] = $_op_type_id;
+            $FELDS =["id","name","parent_id","display_name","company_type","is_company" ,"email" ,"mobile" ,"phone" ,"type" ,"vat" ,"lang" ,"street" ,"city" ,
+                           "street2" ,"state_id","zip" ,"country_id","function" ,"category_id" ,"title" ,"l10n_latam_identification_type_id" ];
+            $dataRead = array();
+            $dataRead = $varOdoo->DataRead($OdooTbl->cliente, $_op_type_id   , $FELDS);    
+            $datos['numdata'] = sizeof($dataRead);
+            $datos['parametros'] = $OdooTbl->getArrayParam(); 
+            $query_cliente = '';
+   foreach ($dataRead as $DataValue) {
+       $llaves =''; 
+         $valores =''; 
+         $updatelist =''; 
+         $separador='';
+         $separadorUpd = '';
+        foreach ($DataValue as $key => $value) {
+            $dato = $value ;
+         if (is_array($value)){$dato = $value[0] ;}
+         
+         $llaves .= $separador."`".$key."`" ; 
+    
+        
+         $valores .=  $separador.'"'.$dato.'"'; 
+         
+         if(trim($key)!='id') {$updatelist .=  $separadorUpd."`".$key.'` = "'.$dato.'"'; 
+         $separadorUpd = ',';
+         }else{
+              $llaves .=  " , `orden`" ;         
+              $valores .=   ' , "'.$dato.'"'; 
+              $id_cliente = $dato;
+         } 
+         
+           if ($key ==='country_id'   ){
+                            $llaves .= ", `nombre_pais`";
+                            $valores.=' , "'.$value[1].'"';
+                            $updatelist .=" , `nombre_pais` = " . '"'.$value[1].'"'; 
+                         } 
+                          if ($key ==='state_id'   ){ 
+                            $llaves .= "  , `nombre_estado`";
+                            $valores.=' , "'.$value[1].'"';
+                            $updatelist .=" , `nombre_estado` = " . '"'.$value[1].'"'; 
+                         } 
+         
+         
+         
+         $separador = ',';
+        }
+        str_replace('/', '-', $valores);
+           $query_cliente= "INSERT INTO documentos_clientes ($llaves ) VALUES ($valores) "
+                   . "ON DUPLICATE KEY UPDATE $updatelist ;";
+            $llaves = '';
+            $valores='';
+            $updatelist = '';
+             $consulta = $link->prepare($query_cliente);
+                   if(!$consulta->execute() )
+                   {echo $query_cliente;
+                        $datos['$query']= $query_cliente;
+                       $datos['error']= 'Error al actualizar las personas (documentos_clientes) !!!'; 
+            echo json_encode($datos);
+            die(); }  
+         }
+         
+         if(trim($query_cliente) == ''){
+              $datos['error']='ok_no_existe_en_odoo';
+                    echo json_encode($datos);
+                 die();
+         }
+         
+         
+         
+         
+            if ( isset($_agregar_a_documento) && $_agregar_a_documento === true 
+                     && isset($_documento_orden) && is_numeric($_documento_orden) && $_documento_orden  > 0 ) {
+                 $_result =$conexion->procedimiento('sp_update_cliente_documento',[$_documento_orden ,$id_cliente ]); 
+                $datos['datosRetornoDoc']  = $_result;
+                if ($_result['_result'] === 'error'){
+                    $datos['error']='error al asignar el cliente al documento ';
+                }
+             } 
+         
+    
+         
+       }
+        catch (PDOException $e) {
+           http_response_code(500);
+        $datos['error']= 'Error de conexión: ' . $e->getMessage();
+           
+     }
+    break;
+    
     case 'UPDATE_VENTAS_LISTADO_ODOO':
           $varOdoo = new Class_php\Odoo(null, null, null,null);
         // $datos['checkAccess'] =  $varOdoo->checkAccess();

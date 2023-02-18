@@ -130,6 +130,57 @@ switch ($action){
     break;
     
     
+    case 'da5195132f73b029d0ce3a1dc2a05a46e7f0461c4':
+           TRY {
+       $conexion =\Class_php\DataBase::getInstance();
+       $link = $conexion->getLink();
+        // $datos['11'] =  $_result['datos'][0]['usuario'];;
+         if ( isset($_procedure) && trim($_procedure) != ''){ 
+             $parametros = array();
+             if (isset($_arraydatos) and is_array($_arraydatos) ){
+                 
+             foreach($_arraydatos as $key => $value ) 
+             {  
+                
+                 $parametros[$key] = $value ; 
+                 
+             }
+             
+             }
+    
+              $_result =$conexion->procedimiento($_procedure, $parametros   ); 
+         if ($_result['_result'] === 'ok'){
+             $datos['datos']= $_result['datos'];
+             $datos['query']= $_result['query'];
+             $datos['parm_query']= $_result['parm_query'];
+             $datos['error']='ok';
+             //print_r($datos['datos'][0]);
+             if(intval($datos['datos'][0]['_result']) !== 100 ){
+                 $datos['error']=$datos['datos'][0]['msg'];
+                 
+             }
+         }else{
+            $datos['error']= 'Error al insertar en la base de datos ' ;
+           echo json_encode($datos);
+           die();  
+         }
+         
+         }else{
+            $datos['error']= 'Error de datos, faltan uno o mas valores para la consulta ' ;
+           echo json_encode($datos);
+           die();  
+         }
+        
+         
+ }
+      catch (PDOException $e) {
+           http_response_code(500);
+        $datos['error']= 'Error de conexión: ' . $e->getMessage();
+           
+     }
+        break;
+        
+        
     case 'ACTUALIZAR_LISTADO_DE_MARCAS':
        $varOdoo = new Class_php\Odoo(null, null, null,null);
          $conexion =\Class_php\DataBase::getInstance();
@@ -195,6 +246,171 @@ switch ($action){
          }
          
         
+         
+       }
+        catch (PDOException $e) {
+           http_response_code(500);
+        $datos['error']= 'Error de conexión: ' . $e->getMessage();
+           
+     }
+    break;
+    case 'ACTUALIZAR_TIPOS_DOCUMENTOS':
+       $varOdoo = new Class_php\Odoo(null, null, null,null);
+         $conexion =\Class_php\DataBase::getInstance();
+        $link = $conexion->getLink(); 
+         TRY{
+            
+         $datos['error']='ok';
+        IF ($varOdoo->checkAccess() === false ){
+            http_response_code(500);
+          $datos['error']= 'Error de coneccion a ODOO !!!'; 
+            echo json_encode($datos);
+            die();  
+        }    
+        
+    //
+      $OdooTbl->clearParam();   
+           $OdooTbl->clearParam(); 
+            $_op_type_id = $varOdoo->DataSet($OdooTbl->tipDocumentos,$OdooTbl->getArrayParam(), $OdooTbl->getArrayLimit());
+           $dataread = array();
+           $dataRead = $varOdoo->DataRead($OdooTbl->tipDocumentos, $_op_type_id , ["id" , "name" , "description" , "display_name" , "l10n_co_document_code"] );
+        $datos['data'] = $dataread;
+        $datos['error'] = 'ok' ;
+     
+        $data['parametros'] = $OdooTbl->getArrayParam(); 
+       $datos['numdata'] = sizeof($dataRead);
+        $datos['data'] = $dataRead; 
+        $datos['parametros'] = $OdooTbl->getArrayParam();
+       
+   foreach ($dataRead as $DataValue) {
+       $llaves =''; 
+         $valores =''; 
+         $updatelist =''; 
+         $separador='';
+         $separadorUpd = '';
+        foreach ($DataValue as $key => $value) {
+            $dato = $value ;
+         if (is_array($value)){$dato = $value[0] ;}
+         
+         $llaves .= $separador."`".$key."`" ; 
+    
+        
+         $valores .=  $separador.'"'.$dato.'"'; 
+         
+         if(trim($key)!='id') {$updatelist .=  $separadorUpd."`".$key.'` = "'.$dato.'"'; 
+         $separadorUpd = ',';
+         } 
+         $separador = ',';
+        }
+        str_replace('/', '-', $valores);
+           $query= "INSERT INTO documentos_clientes_tipos ($llaves ) VALUES ($valores) "
+                   . "ON DUPLICATE KEY UPDATE $updatelist ;";
+            $llaves = '';
+            $valores='';
+            $updatelist = '';
+           $consulta = $link->prepare($query);
+                   if(!$consulta->execute() )
+                   {
+                        $datos['$query']= $query;
+                       $datos['error']= 'Error al actualizar los tipos de documento (documentos_clientes_tipos) !!!'; 
+            echo json_encode($datos);
+            die(); }   
+         }
+         
+        
+         
+       }
+        catch (PDOException $e) {
+           http_response_code(500);
+        $datos['error']= 'Error de conexión: ' . $e->getMessage();
+           
+     }
+    break;
+          
+    case 'ACTUALIZAR_LISTADO_DE_PERSONAS':
+       $varOdoo = new Class_php\Odoo(null, null, null,null);
+         $conexion =\Class_php\DataBase::getInstance();
+        $link = $conexion->getLink(); 
+         TRY{
+            
+         $datos['error']='ok';
+        IF ($varOdoo->checkAccess() === false ){
+            http_response_code(500);
+          $datos['error']= 'Error de coneccion a ODOO !!!'; 
+            echo json_encode($datos);
+            die();  
+        }    
+        
+    
+      $OdooTbl->clearParam();   
+        
+     ////////////////////////////////
+      
+            $OdooTbl->setNewParam("parent_id","=", false ); 
+            $OdooTbl->setNewParam("is_company","=", false ); 
+            $OdooTbl->setNewParam("company_type","=", 'person'); 
+            $data['parametros'] = $OdooTbl->getArrayParam();
+            $_op_type_id = $varOdoo->DataSet($OdooTbl->cliente,$OdooTbl->getArrayParam(), $OdooTbl->getArrayLimit());
+            $datos['op_type_id'] = $_op_type_id;
+            $FELDS =["id","name","parent_id","display_name","company_type","is_company" ,"email" ,"mobile" ,"phone" ,"type" ,"vat" ,"lang" ,"street" ,"city" ,
+                           "street2" ,"state_id","zip" ,"country_id","function" ,"category_id" ,"title" ,"l10n_latam_identification_type_id" ];
+            $dataRead = array();
+            $dataRead = $varOdoo->DataRead($OdooTbl->cliente, $_op_type_id   , $FELDS);    
+            $datos['numdata'] = sizeof($dataRead);
+            $datos['parametros'] = $OdooTbl->getArrayParam(); 
+   foreach ($dataRead as $DataValue) {
+       $llaves =''; 
+         $valores =''; 
+         $updatelist =''; 
+         $separador='';
+         $separadorUpd = '';
+        foreach ($DataValue as $key => $value) {
+            $dato = $value ;
+         if (is_array($value)){$dato = $value[0] ;}
+         
+         $llaves .= $separador."`".$key."`" ; 
+    
+        
+         $valores .=  $separador.'"'.$dato.'"'; 
+         
+         if(trim($key)!='id') {$updatelist .=  $separadorUpd."`".$key.'` = "'.$dato.'"'; 
+         $separadorUpd = ',';
+         }else{
+              $llaves .=  " , `orden`" ;         
+              $valores .=   ' , "'.$dato.'"'; 
+         } 
+         
+           if ($key ==='country_id'   ){
+                            $llaves .= ", `nombre_pais`";
+                            $valores.=' , "'.$value[1].'"';
+                            $updatelist .=" , `nombre_pais` = " . '"'.$value[1].'"'; 
+                         } 
+                          if ($key ==='state_id'   ){ 
+                            $llaves .= "  , `nombre_estado`";
+                            $valores.=' , "'.$value[1].'"';
+                            $updatelist .=" , `nombre_estado` = " . '"'.$value[1].'"'; 
+                         } 
+         
+         
+         
+         $separador = ',';
+        }
+        str_replace('/', '-', $valores);
+           $query= "INSERT INTO documentos_clientes ($llaves ) VALUES ($valores) "
+                   . "ON DUPLICATE KEY UPDATE $updatelist ;";
+            $llaves = '';
+            $valores='';
+            $updatelist = '';
+             $consulta = $link->prepare($query);
+                   if(!$consulta->execute() )
+                   {echo $query;
+                        $datos['$query']= $query;
+                       $datos['error']= 'Error al actualizar las personas (documentos_clientes) !!!'; 
+            echo json_encode($datos);
+            die(); }  
+         }
+         
+    
          
        }
         catch (PDOException $e) {
@@ -318,14 +534,14 @@ switch ($action){
         }  
       $OdooTbl->clearParam();   
       $data['parametros'] = $OdooTbl->getArrayParam();
-      $dataSet = $varOdoo->DataSet($OdooTbl->categorias,$OdooTbl->getArrayParam() , $OdooTbl->getArrayLimit());
+      $dataSet = $varOdoo->DataSet($OdooTbl->categorias_prd,$OdooTbl->getArrayParam() , $OdooTbl->getArrayLimit());
         //$datos['dataSet'] = $dataSet; 
-      $fields = ["id","name","color","parent_id","child_ids","active","parent_path","display_name","create_date","write_date","__last_update"];
-      $dataRead = $varOdoo->DataRead($OdooTbl->categorias, $dataSet  , $fields );
+      $fields = ["id" , "name" , "parent_id" , "child_id" , "parent_path" , "complete_name" , "create_date" , "write_date" , "__last_update" , "property_account_income_categ_id" , "property_account_expense_categ_id" , "product_count"];
+      $dataRead = $varOdoo->DataRead($OdooTbl->categorias_prd, $dataSet   , $fields );
       $datos['numdata'] = sizeof($dataRead);
-       //$datos['data'] = $dataRead; 
+       // $datos['data'] = $dataRead; 
       $datos['parametros'] = $OdooTbl->getArrayParam();
-       
+       $querysHijos = [];
       foreach ($dataRead as $DataValue) {
          $llaves =''; 
          $valores =''; 
@@ -333,8 +549,20 @@ switch ($action){
          $separador='';
          $separadorUpd = '';
          foreach ($DataValue as $key => $value) {
+             $qHijo = '';
             $dato = $value ;
+             if($key == 'child_id'){
+                foreach($value as $dt ){
+                    $qHijo = "insert into prd_categorias_child (  id_categoria, id_cat_hija) "
+                            . "values ( {$DataValue['id']} , $dt ) ;";
+                array_push($querysHijos, $qHijo);
+                    
+                }
+            }
             if (is_array($value)){$dato = $value[0] ;}
+            
+            
+           
             $llaves .= $separador."`".$key."`" ; 
             $valores .=  $separador.'"'.$dato.'"'; 
             if(trim($key)!='id') {$updatelist .=  $separadorUpd."`".$key.'` = "'.$dato.'"'; 
@@ -348,15 +576,40 @@ switch ($action){
             $llaves = '';
             $valores='';
             $updatelist = '';
+           // echo $query;
             $consulta = $link->prepare($query);
                    if(!$consulta->execute() )
                    {
+                       
+                      
                         $datos['$query']= $query;
                        $datos['error']= 'Error al actualizar las categorias (prd_categorias) !!!'; 
             echo json_encode($datos);
             die(); }
          }
          
+             $datos['$querysHijos'] = $querysHijos;
+             $consulta = $link->prepare('truncate table prd_categorias_child ;');
+                   if(!$consulta->execute() )
+                   {
+                       $datos['$query_fallido_hijo']= 'truncate table prd_categorias_child ;';
+                       $datos['error']= 'Error al actualizar los hijos de las categorias (prd_categorias) !!!'; 
+                       echo json_encode($datos);
+                       die(); 
+                       
+                   } 
+             foreach ($querysHijos as  $value) {
+                 
+                  $consulta = $link->prepare($value);
+                   if(!$consulta->execute() )
+                   {
+                       $datos['$query_fallido_hijo']= $value;
+                       $datos['error']= 'Error al actualizar los hijos de las categorias (prd_categorias) !!!'; 
+                       echo json_encode($datos);
+                       die(); 
+                       
+                   }
+             }
         
          
        }
